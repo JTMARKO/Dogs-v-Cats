@@ -119,9 +119,6 @@ def augment_dataset(input_tensor, target_tensor) -> tf.data.Dataset:
 
 
 
-# ------------------------- Testing -------------------------
-
-
 
 if __name__ == "__main__":
 
