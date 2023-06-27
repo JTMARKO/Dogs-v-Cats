@@ -37,10 +37,10 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
             dog
     '''
 
-    trimap -= 1
-
     #clips all data to be either zero or one
-    trimap = tf.clip_by_value(trimap, 0, 1)
+    trimap = tf.where(tf.equal(trimap, 2), tf.zeros_like(trimap), trimap)
+    trimap = tf.where(tf.equal(trimap, 3), tf.ones_like(trimap), trimap)
+
 
     #makes cat tensor to be 2 if it represents a cat
     if isCat:
@@ -97,7 +97,7 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
     image_filenames = os.listdir(image_directory)
 
     image_trimap_paths = [(os.path.join(image_directory, filename),
-                           os.path.join(trimap_directory, "._" + filename.replace(".jpg", ".png")))
+                           os.path.join(trimap_directory, filename.replace(".jpg", ".png")))
                            for filename in image_filenames]
     
     image_trimap_paths
@@ -123,7 +123,7 @@ image_filenames = os.listdir(image_directory)
 
 image_paths = [os.path.join(image_directory, filename) for filename in image_filenames]
 
-trimap_paths = [os.path.join(trimap_directory, "._" + filename.replace(".jpg", ".png"))
+trimap_paths = [os.path.join(trimap_directory, filename.replace(".jpg", ".png"))
                 for filename in image_filenames]
 
 input_dataset = tf.data.Dataset.from_tensor_slices(image_paths)
@@ -132,28 +132,33 @@ target_dataset = tf.data.Dataset.from_tensor_slices(trimap_paths)
 dataset = tf.data.Dataset.zip((input_dataset, target_dataset))
 
 
-im = PIL.Image.open('data/annotations/trimaps/._Abyssinian_1.png')
-im.show()
-# dataset = tf.data.Dataset.from_tensor_slices(image_trimap_paths)
-
 
 dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
-batches = (
-    dataset
-    .cache()
-    .shuffle(1000)
-    .batch(64)
-    .repeat()
-    .prefetch(buffer_size=tf.data.AUTOTUNE)
-)
+# batches = (
+#     dataset
+#     .cache()
+#     .shuffle(1000)
+#     .batch(64)
+#     .repeat()
+#     .prefetch(buffer_size=tf.data.AUTOTUNE)
+# )
 
-for images, masks in batches.take(2):
-    sample_image, sample_mask = images[0], masks[0]
+first = dataset.take(1)
+first = next(iter(first.as_numpy_iterator()))
+print(first)
 
-    # plt.imshow(tf.keras.utils.array_to_img(sample_mask))
-    plt.axis('off')
-    plt.show()
+# plt.imshow(tf.keras.utils.array_to_img(first[0]))
+
+
+
+
+# for images, masks in batches.take(2):
+#     sample_image, sample_mask = images[0], masks[0]
+
+#     plt.imshow(tf.keras.utils.array_to_img(sample_mask))
+#     plt.axis('off')
+#     plt.show()
 
 
 
