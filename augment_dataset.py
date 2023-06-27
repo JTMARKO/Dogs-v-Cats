@@ -106,6 +106,10 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
 
     return dataset
 
+def augment_dataset(input_tensor, target_tensor) -> tf.data.Dataset:
+    pass
+
+
 
 
 # data_dir = Path('data').with_suffix('')
@@ -146,9 +150,10 @@ dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
 first = dataset.take(1)
 first = next(iter(first.as_numpy_iterator()))
-print(first)
+print(first[1])
 
-# plt.imshow(tf.keras.utils.array_to_img(first[0]))
+plt.imshow(first[1])
+plt.show()
 
 
 
