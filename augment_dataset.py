@@ -40,7 +40,6 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
     #clips all data to be either zero or one
     trimap %= 2
 
-
     #makes cat tensor to be 2 if it represents a cat
     if isCat:
         trimap *= 2
@@ -95,13 +94,15 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
 
     image_filenames = os.listdir(image_directory)
 
-    image_trimap_paths = [(os.path.join(image_directory, filename),
-                           os.path.join(trimap_directory, filename.replace(".jpg", ".png")))
-                           for filename in image_filenames]
-    
-    image_trimap_paths
-    
-    dataset = tf.data.Dataset.from_tensor_slices(image_trimap_paths)
+    image_paths = [os.path.join(image_directory, filename) for filename in image_filenames]
+
+    trimap_paths = [os.path.join(trimap_directory, filename.replace(".jpg", ".png"))
+                for filename in image_filenames]
+
+    input_dataset = tf.data.Dataset.from_tensor_slices(image_paths)
+    target_dataset = tf.data.Dataset.from_tensor_slices(trimap_paths)
+
+    dataset = tf.data.Dataset.zip((input_dataset, target_dataset))
 
     return dataset
 
@@ -118,65 +119,27 @@ def augment_dataset(input_tensor, target_tensor) -> tf.data.Dataset:
 
 
 
+if __name__ == "__main__":
+
+    dataset = create_image_trimap_dataset("Data")
 
 
-# data_dir = Path('data').with_suffix('')
+    dataset = dataset.map(preprocess_image)
 
-# images = list(data_dir.glob('annotations/trimaps/*'))
-# print(len(images))
-# im = PIL.Image.open(str(images[0]))
+    # batches = (
+    #     dataset
+    #     .cache()
+    #     .shuffle(1000)
+    #     .batch(64)
+    #     .repeat()
+    #     .prefetch(buffer_size=tf.data.AUTOTUNE)
+    # )
+    # dataset = dataset.shuffle(500)
 
-# im.show()
+    first = dataset.take(1)
+    first = next(iter(first.as_numpy_iterator()))
+    print(first[1])
 
-image_directory = "data/images"
-trimap_directory = "data/annotations/trimaps"
+    plt.imshow(first[1])
+    plt.show()
 
-image_filenames = os.listdir(image_directory)
-
-image_paths = [os.path.join(image_directory, filename) for filename in image_filenames]
-
-trimap_paths = [os.path.join(trimap_directory, filename.replace(".jpg", ".png"))
-                for filename in image_filenames]
-
-input_dataset = tf.data.Dataset.from_tensor_slices(image_paths)
-target_dataset = tf.data.Dataset.from_tensor_slices(trimap_paths)
-
-dataset = tf.data.Dataset.zip((input_dataset, target_dataset))
-
-
-
-dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-
-# batches = (
-#     dataset
-#     .cache()
-#     .shuffle(1000)
-#     .batch(64)
-#     .repeat()
-#     .prefetch(buffer_size=tf.data.AUTOTUNE)
-# )
-
-first = dataset.take(1)
-first = next(iter(first.as_numpy_iterator()))
-print(first[1])
-
-plt.imshow(first[1])
-plt.show()
-
-
-
-
-# for images, masks in batches.take(2):
-#     sample_image, sample_mask = images[0], masks[0]
-
-#     plt.imshow(tf.keras.utils.array_to_img(sample_mask))
-#     plt.axis('off')
-#     plt.show()
-
-
-
-
-
-
-# dataset = dataset.as_numpy_iterator()
-# print(list(dataset)[0])
