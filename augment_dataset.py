@@ -38,8 +38,7 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
     '''
 
     #clips all data to be either zero or one
-    trimap = tf.where(tf.equal(trimap, 2), tf.zeros_like(trimap), trimap)
-    trimap = tf.where(tf.equal(trimap, 3), tf.ones_like(trimap), trimap)
+    trimap %= 2
 
 
     #makes cat tensor to be 2 if it represents a cat
