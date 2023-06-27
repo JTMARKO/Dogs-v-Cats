@@ -25,7 +25,7 @@ def extract_tar(tar_file_path: str, extracted_folder_path: str):
         tar.extractall(path=extracted_folder_path)
 
 
-def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
+def pre_process_trimap(trimap: tf.Tensor, isCat: tf.bool) -> tf.Tensor:
     '''
     Preprocesses a trimap tensor so all pixels which represent cats have a
     value of 2, all pixels which represent dogs have a value of 1, and all
@@ -34,7 +34,7 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
     Args:
         trimap (tf.Tensor): Oxford-iiit pet dataset trimap
         isCat (bool): Boolean representing whether the image contains a cat or
-            dog
+        dog
     Returns:
         tf.Tensor
             Tensor mapping representing the edited pixels in the png.
@@ -52,7 +52,7 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
     return trimap
 
 
-def preprocess_image(image_path: str, trimap_path: str) -> tuple:
+def preprocess_image(image_path: tf.string, trimap_path: tf.string) -> tuple:
     '''
     Preprocesses a data-label pair
 
