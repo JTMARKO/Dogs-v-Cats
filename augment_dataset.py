@@ -40,10 +40,12 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
             Tensor mapping representing the edited pixels in the png.
     '''
 
-    #clips all data to be either zero or one
+    # clips all data to be either zero or one; data has the mappings
+    # 1:foreground, 2:background, 3:edges. this removes the background so only
+    # the mask remains
     trimap %= 2
 
-    #makes cat tensor to be 2 if it represents a cat
+    # makes cat tensor to be 2 if it represents a cat
     if isCat:
         trimap *= 2
 
@@ -63,15 +65,12 @@ def preprocess_image(image_path: str, trimap_path: str) -> tuple:
     '''
 
 
-    #all cats in this dataset start with a capital letter
-    image_path_prefix = "data/images/"
-    image_first_letter = tf.strings.substr(image_path, pos=len(image_path_prefix), len=1)
-    print(image_first_letter)
+    # all cats in this dataset have a filename which starts with a capital letter
+    first_letter_position = len("data/images/")
+
+    image_first_letter = tf.strings.substr(image_path, pos=first_letter_position, len=1)
     isCat = tf.strings.regex_full_match(image_first_letter, '[A-Z]')
 
-    print(isCat)
-
-    # isCat = bool(isCat.numpy())    
 
     image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
