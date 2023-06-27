@@ -111,7 +111,18 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
     return dataset
 
 
-def augment_dataset(input_tensor, target_tensor) -> tf.data.Dataset:
+def augment_dataset(input_tensor: tf.Tensor, target_tensor: tf.Tensor) -> tuple:
+    '''
+    Augments an input/output pair with random rotations, zooms, and contrast
+    changes
+
+    Args:
+        input_tensor (tf.Tensor): An input tensor
+        output_tensor (tf.Tensor): An output tensor
+    Returns:
+        tuple
+            Tuple of tensor objects representing i/o of a dataset
+    '''
     pass
 
 
