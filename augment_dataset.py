@@ -35,6 +35,9 @@ def pre_process_trimap(trimap: tf.Tensor, isCat: bool) -> tf.Tensor:
         trimap (tf.Tensor): Oxford-iiit pet dataset trimap
         isCat (bool): Boolean representing whether the image contains a cat or
             dog
+    Returns:
+        tf.Tensor
+            Tensor mapping representing the edited pixels in the png.
     '''
 
     #clips all data to be either zero or one
@@ -54,6 +57,9 @@ def preprocess_image(image_path: str, trimap_path: str) -> tuple:
     Args:
         image_path (str): Path to an image .jpg file
         trimap_path (str): Path to a trimap .png file
+    Returns:
+        tuple
+            Tuple of tensor objects representing i/o of a dataset
     '''
 
 
@@ -95,7 +101,6 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
     image_filenames = os.listdir(image_directory)
 
     image_paths = [os.path.join(image_directory, filename) for filename in image_filenames]
-
     trimap_paths = [os.path.join(trimap_directory, filename.replace(".jpg", ".png"))
                 for filename in image_filenames]
 
