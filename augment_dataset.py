@@ -4,8 +4,6 @@ import numpy as np
 import os
 from pathlib import Path
 
-import PIL
-import PIL.Image
 import matplotlib.pyplot as plt
 
 
@@ -61,12 +59,13 @@ def preprocess_image(image_path: tf.string, trimap_path: tf.string) -> tuple:
         trimap_path (str): Path to a trimap .png file
     Returns:
         tuple
-            Tuple of tensor objects representing i/o of a dataset
+            Tuple of tensor objects representing i/o of a dataset in the shape
+            (128x128)
     '''
 
 
     # all cats in this dataset have a filename which starts with a capital letter
-    first_letter_position = len("data/images/")
+    first_letter_position = len("Data/images/")
 
     image_first_letter = tf.strings.substr(image_path, pos=first_letter_position, len=1)
     isCat = tf.strings.regex_full_match(image_first_letter, '[A-Z]')
@@ -74,9 +73,15 @@ def preprocess_image(image_path: tf.string, trimap_path: tf.string) -> tuple:
 
     image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
+    # image must be in range 0-1
+    image = tf.cast(image, tf.float32) / 255.0
+    image = tf.image.resize(image, (128, 128),)
 
     trimap = tf.io.read_file(trimap_path)
     trimap = tf.image.decode_png(trimap, channels=1)
+    trimap = tf.image.resize(trimap,
+                             (128, 128),
+                             method = tf.image.ResizeMethod.NEAREST_NEIGHBOR, )
 
     trimap = pre_process_trimap(trimap, isCat)
 
@@ -99,9 +104,11 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
 
     image_filenames = os.listdir(image_directory)
 
-    image_paths = [os.path.join(image_directory, filename) for filename in image_filenames]
+    image_paths = [os.path.join(image_directory, filename)
+                   for filename in image_filenames ]
+
     trimap_paths = [os.path.join(trimap_directory, filename.replace(".jpg", ".png"))
-                for filename in image_filenames]
+                    for filename in image_filenames ]
 
     input_dataset = tf.data.Dataset.from_tensor_slices(image_paths)
     target_dataset = tf.data.Dataset.from_tensor_slices(trimap_paths)
@@ -109,6 +116,39 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
     dataset = tf.data.Dataset.zip((input_dataset, target_dataset))
 
     return dataset
+
+
+def split_dataset(dataset: tf.data.Dataset, training: float, testing: float) -> tuple:
+    '''
+    Splits a dataset three ways between training, testing and validation
+
+    Args:
+        dataset (tf.data.Dataset): the dataset to be split
+        training (tf.data.Dataset): fraction of dataset to train
+        testing (tf.data.Dataset): fraction of dataset to test
+    Returns:
+        tuple
+            Tuple of (train_dataset, val_dataset, test_dataset)
+    '''
+
+    dataset = dataset.shuffle()
+
+    validation = 1 - training - testing
+
+    num_samples = tf.data.experimental.cardinality(dataset).numpy()
+
+    train_samples = int(training * num_samples)
+    val_samples = int(validation * num_samples)
+
+
+    train_dataset = dataset.take(train_samples)
+    val_dataset = dataset.skip(train_samples).take(val_samples)
+    test_dataset = dataset.skip(train_samples + val_samples)
+
+    return train_dataset, val_dataset, test_dataset
+
+
+
 
 
 def augment_dataset(input_tensor: tf.Tensor, target_tensor: tf.Tensor) -> tuple:
@@ -138,20 +178,31 @@ if __name__ == "__main__":
 
     dataset = dataset.map(preprocess_image)
 
-    # batches = (
-    #     dataset
-    #     .cache()
-    #     .shuffle(1000)
-    #     .batch(64)
-    #     .repeat()
-    #     .prefetch(buffer_size=tf.data.AUTOTUNE)
-    # )
-    # dataset = dataset.shuffle(500)
 
-    first = dataset.take(1)
-    first = next(iter(first.as_numpy_iterator()))
-    print(first[1])
+    batches = (
+        dataset
+        .cache()
+        .shuffle(1000)
+        .batch(64)
+        .repeat()
+        .prefetch(buffer_size=tf.data.AUTOTUNE)
+    )
+    dataset = dataset.shuffle(500)
 
-    plt.imshow(first[1])
-    plt.show()
+    member_1 = dataset.take(1)
+
+    member_233 = dataset.skip(232).take(1)
+
+
+    for val in member_1:
+        plt.imshow(val[0].numpy())
+        plt.show()
+        plt.imshow(val[1].numpy())
+        plt.show()
+
+    for val in member_233:
+        plt.imshow(val[0].numpy())
+        plt.show()
+        plt.imshow(val[1].numpy())
+        plt.show()
 
