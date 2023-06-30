@@ -1,5 +1,7 @@
 import tensorflow as tf
 from tensorflow_examples.models.pix2pix import pix2pix
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
 
 
 base_model = tf.keras.applications.MobileNetV2(input_shape=[128, 128, 3], include_top=False)
@@ -62,3 +64,57 @@ def unet_model(output_channels:int) -> tf.keras.Model:
     x = last(x)
 
     return tf.keras.Model(inputs=inputs, outputs=x)
+
+
+def display(display_list: list):
+    '''
+    Displays from a list of images
+
+    Args:
+        display_list (list): List of tensor images
+    '''
+    plt.figure(figsize=(15, 15))
+
+    title = ['Input Image', 'True Mask', 'Predicted Mask']
+
+
+    for i in range(len(display_list)):
+        plt.subplot(1, len(display_list), i+1)
+        plt.title(title[i])
+        # if i == 2:
+        #     if max(display_list[i] == 2):
+        #         print("Predicted class: Cat")
+        #     else:
+        #         print("Predicted class: Dog")
+        plt.imshow(tf.keras.utils.array_to_img(display_list[i]))
+        plt.axis('off')
+    plt.show()
+
+
+def create_mask(pred_mask: tf.Tensor) -> tf.Tensor:
+    '''
+    Creates a mask from a predicted mask
+
+    Args:
+        pred_mask (tf.Tensor): Predicted 3-channel output mask
+    Returns:
+        tf.Tensor
+            the predicted tensor of the model
+    '''
+    pred_mask = tf.math.argmax(pred_mask, axis=-1)
+    pred_mask = pred_mask[..., tf.newaxis]
+    return pred_mask[0]
+
+
+def show_predictions(model: tf.keras.Model, sample_image: tf.Tensor, sample_mask: tf.Tensor):
+    '''
+    Shows the predictions of a model
+
+    Args:
+        model (tf.keras.model): model
+        sample_image (tf.Tensor): a sampled image
+        sample_mask (tf.Tensor): a sampled mask
+    '''
+
+    display([sample_image, sample_mask,
+             create_mask(model.predict(sample_image[tf.newaxis, ...]))])
