@@ -118,12 +118,12 @@ def create_image_trimap_dataset(data_path: str) -> tf.data.Dataset:
     return dataset
 
 
-def split_dataset(dataset: tf.data.Dataset, training: float, testing: float) -> tuple:
+def create_split_dataset(data_path: str, training: float, testing: float) -> tuple:
     '''
     Splits a dataset three ways between training, testing and validation
 
     Args:
-        dataset (tf.data.Dataset): the dataset to be split
+        data_path (tf.data.Dataset): path of the dataset
         training (tf.data.Dataset): fraction of dataset to train
         testing (tf.data.Dataset): fraction of dataset to test
     Returns:
@@ -131,7 +131,9 @@ def split_dataset(dataset: tf.data.Dataset, training: float, testing: float) -> 
             Tuple of (train_dataset, val_dataset, test_dataset)
     '''
 
-    dataset = dataset.shuffle()
+    dataset = create_image_trimap_dataset(data_path)
+    dataset = dataset.map(preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(1000)
 
     validation = 1 - training - testing
 
@@ -140,15 +142,11 @@ def split_dataset(dataset: tf.data.Dataset, training: float, testing: float) -> 
     train_samples = int(training * num_samples)
     val_samples = int(validation * num_samples)
 
-
     train_dataset = dataset.take(train_samples)
     val_dataset = dataset.skip(train_samples).take(val_samples)
     test_dataset = dataset.skip(train_samples + val_samples)
 
     return train_dataset, val_dataset, test_dataset
-
-
-
 
 
 def augment_dataset(input_tensor: tf.Tensor, target_tensor: tf.Tensor) -> tuple:
@@ -173,36 +171,37 @@ def augment_dataset(input_tensor: tf.Tensor, target_tensor: tf.Tensor) -> tuple:
 
 if __name__ == "__main__":
 
-    dataset = create_image_trimap_dataset("Data")
+    # dataset = create_image_trimap_dataset("Data")
 
 
-    dataset = dataset.map(preprocess_image)
+    # dataset = dataset.map(preprocess_image)
 
 
-    batches = (
-        dataset
-        .cache()
-        .shuffle(1000)
-        .batch(64)
-        .repeat()
-        .prefetch(buffer_size=tf.data.AUTOTUNE)
-    )
-    dataset = dataset.shuffle(500)
+    # batches = (
+    #     dataset
+    #     .cache()
+    #     .shuffle(1000)
+    #     .batch(64)
+    #     .repeat()
+    #     .prefetch(buffer_size=tf.data.AUTOTUNE)
+    # )
+    # dataset = dataset.shuffle(500)
 
-    member_1 = dataset.take(1)
+    # member_1 = dataset.take(1)
 
-    member_233 = dataset.skip(232).take(1)
+    # member_233 = dataset.skip(232).take(1)
 
 
-    for val in member_1:
-        plt.imshow(val[0].numpy())
-        plt.show()
-        plt.imshow(val[1].numpy())
-        plt.show()
+    # for val in member_1:
+    #     plt.imshow(val[0].numpy())
+    #     plt.show()
+    #     plt.imshow(val[1].numpy())
+    #     plt.show()
 
-    for val in member_233:
-        plt.imshow(val[0].numpy())
-        plt.show()
-        plt.imshow(val[1].numpy())
-        plt.show()
+    # for val in member_233:
+    #     plt.imshow(val[0].numpy())
+    #     plt.show()
+    #     plt.imshow(val[1].numpy())
+    #     plt.show()
 
+    pass
