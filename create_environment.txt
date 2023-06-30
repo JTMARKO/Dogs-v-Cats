@@ -1,0 +1,23 @@
+conda create --name dogs-v-cats python=3.9
+y
+
+
+conda deactivate
+conda activate dogs-v-cats
+
+conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+
+y
+
+pip install --upgrade pip
+
+pip install "tensorflow<2.11" 
+
+pip install numpy
+pip install pillow
+pip install matplotlib
+
+pip install git+https://github.com/tensorflow/examples.git
+pip install IPython
+
+pip install pyyaml h5py
